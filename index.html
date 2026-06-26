@@ -9,8 +9,18 @@
     
     #buffer { height: 60px; background: white; border-bottom: 2px solid #ddd; display: flex; align-items: center; padding: 0 15px; font-size: 20px; font-weight: bold; }
     
-    #main-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+   /* 修改這裡：加入 align-content: start; */
+    #main-grid { 
+        flex: 1; 
+        overflow-y: auto; 
+        display: grid; 
+        grid-template-columns: repeat(3, 1fr); 
+        gap: 10px; 
+        padding: 10px; 
+        align-content: start; /* 關鍵！告訴瀏覽器按鈕由上往下排，放不下就用滾動的，不要硬擠 */
+    }
     
+    /* 修改這裡：加入 gap: 5px; */
     .btn { 
         background: white; 
         border: 1px solid #ccc; 
@@ -26,6 +36,7 @@
         aspect-ratio: 1 / 1; 
         font-size: 16px; 
         overflow: hidden;
+        gap: 5px; /* 關鍵！強制讓 Emoji 與文字之間保持 5px 的安全距離，避免圖文疊在一起 */
     }
 
     .btn:active {
