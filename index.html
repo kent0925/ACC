@@ -146,17 +146,43 @@
             });
         }
 
-        // 6. 語音朗讀函式
-        function speakText(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'zh-TW';
-                utterance.rate = 1.0;
-                utterance.pitch = 1.0;
-                window.speechSynthesis.speak(utterance);
+// ==========================================
+// 6. 語音朗讀函式 (升級版：支援男聲與音調調整)
+// ==========================================
+let systemVoices = [];
+
+// 網頁載入時，先抓取手機內建的所有語音庫
+window.speechSynthesis.onvoiceschanged = () => {
+    systemVoices = window.speechSynthesis.getVoices();
+};
+
+function speakText(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        utterance.lang = 'zh-TW'; 
+        utterance.rate = 1.0;  // 語速 (1.0為正常，可改為 0.9 放慢)
+        
+        // 降低音調：0.1 到 2.0，設為 0.7 聽起來會偏向低沉的男聲
+        utterance.pitch = 0.7; 
+
+        // 進階：嘗試尋找系統中真正的中文男聲
+        if (systemVoices.length > 0) {
+            // 尋找名字裡有 Male 或 男 的中文語音
+            const maleVoice = systemVoices.find(v => 
+                v.lang.includes('zh') && 
+                (v.name.includes('Male') || v.name.includes('男') || v.name.includes('Nan'))
+            );
+            if (maleVoice) {
+                utterance.voice = maleVoice;
+                utterance.pitch = 1.0; // 如果找到真男聲，就恢復正常音調
             }
         }
+        
+        window.speechSynthesis.speak(utterance);
+    }
+}
 
         // 7. 離線與連線資料處理邏輯
         const GAS_URL = "https://script.google.com/macros/s/AKfycbynWA6L3G9PaVK6dyyXwHvZXuzWPyaC5EQ9CJau8HxEhR9ZZAKSU6uXePj2Zt8b1tWybA/exec";
