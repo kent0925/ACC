@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AAC 溝通系統</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; height: 100vh; }
+        /* 頂部 Buffer */
+        #buffer { height: 60px; background: white; border-bottom: 2px solid #ddd; display: flex; align-items: center; padding: 0 15px; font-size: 20px; font-weight: bold; }
+        /* 內容區 */
+        #main-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+        .btn { background: white; border: 1px solid #ccc; border-radius: 10px; padding: 15px; text-align: center; font-size: 18px; box-shadow: 2px 2px 5px #ccc; }
+        /* 底部固定欄位 */
+        #social-bar { background: #e0e0e0; padding: 10px; display: flex; gap: 5px; overflow-x: auto; }
+        #tab-bar { background: #333; color: white; display: flex; justify-content: space-around; padding: 15px; }
+        .tab { cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="buffer">點擊下方按鈕開始溝通...</div>
+    <div id="main-grid"></div>
+    <div id="social-bar"></div> <!-- 全局社交詞 -->
+    <div id="tab-bar"></div> <!-- 主題分頁 -->
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbynWA6L3G9PaVK6dyyXwHvZXuzWPyaC5EQ9CJau8HxEhR9ZZAKSU6uXePj2Zt8b1tWybA/exec"; // 請填入您的 GAS 部署網址
+        let allData = [];
+
+        // 初始化：抓取資料
+        fetch(GAS_URL).then(res => res.json()).then(data => {
+            allData = data;
+            renderTabs();
+            renderSocialBar();
+            renderGrid(allData[0].theme); // 預設顯示第一個主題
+        });
+
+        // 渲染底部 Tab
+        function renderTabs() {
+            const themes = [...new Set(allData.map(item => item.theme))];
+            const tabBar = document.getElementById('tab-bar');
+            themes.forEach(t => {
+                tabBar.innerHTML += `<div class="tab" onclick="renderGrid('${t}')">${t}</div>`;
+            });
+        }
+
+        // 渲染社交詞 (Global Bar)
+        function renderSocialBar() {
+            const bar = document.getElementById('social-bar');
+            allData.filter(d => d.isSocial).forEach(d => {
+                bar.innerHTML += `<div class="btn">${applyEmoji(d.label)}</div>`;
+            });
+        }
+
+        // 渲染主要內容
+        function renderGrid(theme) {
+            const grid = document.getElementById('main-grid');
+            grid.innerHTML = '';
+            allData.filter(d => d.theme === theme && !d.isSocial).forEach(d => {
+                grid.innerHTML += `<div class="btn" onclick="addToBuffer('${d.label}')">${applyEmoji(d.label)}</div>`;
+            });
+        }
+
+        // 輔助功能：自動 Emoji
+        function applyEmoji(text) {
+            const map = { "喝水": "💧", "吃飯": "🍚", "藥": "💊", "謝謝": "🙏" };
+            for(let key in map) if(text.includes(key)) return map[key] + " " + text;
+            return "💬 " + text;
+        }
+
+        function addToBuffer(text) {
+            document.getElementById('buffer').innerText = text;
+        }
+    </script>
+</body>
+</html>
