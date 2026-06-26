@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安裝小卡</title>
+    <style>
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'PingFang TC', 'Helvetica Neue', sans-serif;
+        }
+        .card {
+            background: white;
+            width: 380px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 1px solid #e1e4e8;
+        }
+        .header {
+            background: #4A90E2;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid #ccc;
+        }
+        .section.ios { border-color: #000000; }
+        .section.android { border-color: #3DDC84; }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        ol {
+            margin: 0;
+            padding-left: 20px;
+            color: #333;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        li {
+            margin-bottom: 6px;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #E53935;
+        }
+        .footer {
+            background: #FFF3CD;
+            color: #856404;
+            padding: 15px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            border-top: 1px solid #FFEEBA;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="header">
+            📱 【專屬溝通板】安裝小卡
+        </div>
+        
+        <div class="content">
+            <div class="section ios">
+                <div class="section-title">🍎 iPhone / iPad 用戶</div>
+                <ol>
+                    <li>打開 Safari 瀏覽器，進入溝通板網址。</li>
+                    <li>點擊正下方的 <span class="highlight">「分享按鈕」</span> (方塊 ⬆️ 往上長出箭頭)。</li>
+                    <li>選單往下滑，點選 ➕ <span class="highlight">「加入主畫面」</span>。</li>
+                    <li>右上角點選 <b>「新增」</b>。</li>
+                    <li>🎉 完成！桌面上會出現專屬圖示！</li>
+                </ol>
+            </div>
+
+            <div class="section android">
+                <div class="section-title">🤖 Android (安卓) 用戶</div>
+                <ol>
+                    <li>打開 Chrome 瀏覽器，進入溝通板網址。</li>
+                    <li>點擊右上角的 <span class="highlight">「三個點」</span> ( ⋮ 選單 )。</li>
+                    <li>找到並點選 📱 <span class="highlight">「加到主畫面」</span>。</li>
+                    <li>點選 <b>「新增」</b>。</li>
+                    <li>🎉 完成！回到桌面就能看到它囉！</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="footer">
+            💡 <b>小提醒：</b>第一次打開請記得將手機側邊的<b>「靜音鍵」打開</b>，並將音量調大，才能聽到聲音喔！
+        </div>
+    </div>
+
+</body>
+</html>
