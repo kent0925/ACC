@@ -10,15 +10,16 @@
     #buffer { height: 60px; background: white; border-bottom: 2px solid #ddd; display: flex; align-items: center; padding: 0 15px; font-size: 20px; font-weight: bold; }
     
    /* 修改這裡：加入 align-content: start; */
-    #main-grid { 
-        flex: 1; 
-        overflow-y: auto; 
-        display: grid; 
-        grid-template-columns: repeat(3, 1fr); 
-        gap: 10px; 
-        padding: 10px; 
-        align-content: start; /* 關鍵！告訴瀏覽器按鈕由上往下排，放不下就用滾動的，不要硬擠 */
-    }
+#main-grid { 
+    flex: 1; 
+    overflow-y: auto; 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    grid-auto-rows: max-content; /* 關鍵1：強制按鈕保持原有高度，絕對不准擠壓變形 */
+    align-content: start;        /* 關鍵2：讓所有按鈕從最頂部開始排，多出來的往下捲動 */
+    gap: 10px; 
+    padding: 10px; 
+}
     
     /* 修改這裡：加入 gap: 5px; */
     .btn { 
