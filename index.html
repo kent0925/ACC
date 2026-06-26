@@ -4,15 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AAC 溝通系統</title>
-    <style>
-        body { margin: 0; font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; height: 100vh; }
-        #buffer { height: 60px; background: white; border-bottom: 2px solid #ddd; display: flex; align-items: center; padding: 0 15px; font-size: 20px; font-weight: bold; }
-        #main-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
-        .btn { background: white; border: 1px solid #ccc; border-radius: 10px; padding: 15px; text-align: center; font-size: 18px; box-shadow: 2px 2px 5px #ccc; cursor: pointer; }
-        #social-bar { background: #e0e0e0; padding: 10px; display: flex; gap: 5px; overflow-x: auto; border-top: 1px solid #ccc; }
-        #tab-bar { background: #333; color: white; display: flex; justify-content: space-around; padding: 15px; }
-        .tab { cursor: pointer; padding: 5px 10px; }
-    </style>
+<style>
+    body { margin: 0; font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; height: 100vh; }
+    
+    #buffer { height: 60px; background: white; border-bottom: 2px solid #ddd; display: flex; align-items: center; padding: 0 15px; font-size: 20px; font-weight: bold; }
+    
+    /* 調整 Grid 區域 */
+    #main-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+    
+    /* 更新後的按鈕樣式 */
+    .btn { 
+        background: white; 
+        border: 1px solid #ccc; 
+        border-radius: 10px; 
+        padding: 5px; 
+        text-align: center; 
+        box-shadow: 2px 2px 5px #ccc; 
+        cursor: pointer; 
+        
+        /* 固定格子大小的關鍵設定 */
+        display: flex;
+        flex-direction: column; /* 讓 emoji 在文字上方 */
+        align-items: center;
+        justify-content: center;
+        aspect-ratio: 1 / 1;    /* 強制正方形 */
+        font-size: 16px; 
+        overflow: hidden;       /* 防止內容溢出 */
+    }
+
+    #social-bar { background: #e0e0e0; padding: 10px; display: flex; gap: 5px; overflow-x: auto; border-top: 1px solid #ccc; }
+    #tab-bar { background: #333; color: white; display: flex; justify-content: space-around; padding: 15px; }
+    .tab { cursor: pointer; padding: 5px 10px; }
+</style>
 </head>
 <body>
 
