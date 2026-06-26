@@ -9,10 +9,8 @@
     
     #buffer { height: 60px; background: white; border-bottom: 2px solid #ddd; display: flex; align-items: center; padding: 0 15px; font-size: 20px; font-weight: bold; }
     
-    /* 調整 Grid 區域 */
     #main-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
     
-    /* 更新後的按鈕樣式 */
     .btn { 
         background: white; 
         border: 1px solid #ccc; 
@@ -21,15 +19,19 @@
         text-align: center; 
         box-shadow: 2px 2px 5px #ccc; 
         cursor: pointer; 
-        
-        /* 固定格子大小的關鍵設定 */
         display: flex;
-        flex-direction: column; /* 讓 emoji 在文字上方 */
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        aspect-ratio: 1 / 1;    /* 強制正方形 */
+        aspect-ratio: 1 / 1; 
         font-size: 16px; 
-        overflow: hidden;       /* 防止內容溢出 */
+        overflow: hidden;
+    }
+
+    /* 在這裡加上這段 */
+    .btn:active {
+        transform: scale(0.95); /* 按下去時縮小，模擬按壓感 */
+        background: #e0e0e0;     /* 按下去時顏色變深 */
     }
 
     #social-bar { background: #e0e0e0; padding: 10px; display: flex; gap: 5px; overflow-x: auto; border-top: 1px solid #ccc; }
@@ -39,12 +41,23 @@
 </head>
 <body>
 
-    <div id="buffer">點擊下方按鈕開始溝通...</div>
+    <div id="buffer-container" style="display: flex; align-items: center; background: white; border-bottom: 2px solid #ddd; height: 60px;">
+    <div id="buffer" style="flex: 1; padding: 0 15px; font-size: 20px; font-weight: bold; overflow: hidden; white-space: nowrap;">點擊下方按鈕開始溝通...</div>
+    <button onclick="clearBuffer()" style="margin-right: 10px; padding: 8px 12px; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; background: #fff; cursor: pointer;">清除</button>
+    </div>
     <div id="main-grid"></div>
     <div id="social-bar"></div>
     <div id="tab-bar"></div>
 
     <script>
+
+    // 加入這個函式
+function clearBuffer() {
+    document.getElementById('buffer').innerText = '點擊下方按鈕開始溝通...';
+    // 選用：清除時發聲提示（如果您想讓家人知道按了清除）
+    speakText('已清除'); 
+    }
+
         // 1. 內建 Emoji 映射
 const EMOJI_MAP = {
     // 食
@@ -113,7 +126,10 @@ const EMOJI_MAP = {
                 const div = document.createElement('div');
                 div.className = 'btn';
                 div.innerText = applyEmoji(d.label);
-                div.onclick = () => document.getElementById('buffer').innerText = d.label;
+                div.onclick = () => {
+                document.getElementById('buffer').innerText = d.label;
+                speakText(d.label); // 點擊時同時朗讀
+                };
                 bar.appendChild(div);
             });
 
@@ -128,7 +144,10 @@ const EMOJI_MAP = {
                 const div = document.createElement('div');
                 div.className = 'btn';
                 div.innerText = applyEmoji(d.label); // 關鍵：確保這裡有呼叫 applyEmoji
-                div.onclick = () => document.getElementById('buffer').innerText = d.label;
+                div.onclick = () => {
+                document.getElementById('buffer').innerText = d.label;
+                speakText(d.label); // 點擊時同時朗讀
+                 };
                 grid.appendChild(div);
             });
         }
