@@ -61,119 +61,136 @@
     <div id="tab-bar"></div>
 
     <script>
-        // 1. 內建 Emoji 映射
+// 1. 內建 Emoji 映射 (包含所有最新詞彙)
 const EMOJI_MAP = {
     // 食
     "喝水": "💧", "咖啡": "☕", "牛肉": "🥩", "雞肉": "🍗", "豬肉": "🥓", 
     "魚肉": "🐟", "海鮮": "🦐", "麵類": "🍜", "湯類": "🍲", "米飯": "🍚", 
     "蔬菜 (紅/黃)": "🥕", "蔬菜 (綠/白/紫)": "🥦",
-
     // 衣
     "外套": "🧥", "長袖": "👕", "短袖": "👕", "長褲": "👖", "短褲": "🩳", 
     "襪子": "🧦", "拖鞋": "🩴",
-
     // 住
     "開/關燈": "💡", "開/關電視": "📺", "開/關冷氣": "❄️", "開/關風扇": "🎐", 
     "太冷": "🥶", "太熱": "🥵", "想睡覺": "🛌", "廁所": "🚽", "洗澡": "🚿", 
     "洗臉": "🧽", "洗手/腳": "🧼", "刷牙": "🪥",
-
     // 行
     "回家裡": "🏠", "去店裡": "🏪", "回診和信": "🏥", "回診三重": "🏥", 
     "坐公車": "🚌", "坐捷運": "🚇", "坐計程車": "🚕", "走路去": "🚶",
-
     // 育樂
     "手機": "📱", "手機充電": "🔋", "手錶": "⌚", "手錶充電": "⚡", 
     "公園散步": "🌳", "堤防散步": "🌊", "到處走走": "🚶‍♂️", "運動場散步": "🏃",
-
-    // 醫療 (用藥)
+    // 醫療
     "吃藥": "💊", "血糖藥": "🩸", "癌症藥": "🎗️", "止痛藥": "🩹",
-
-    // 醫療 (身體部位不舒服)
     "頭不舒服": "🤕", "眼睛不舒服": "👁️", "耳朵不舒服": "👂", "嘴巴不舒服": "👄", 
     "鼻子不舒服": "👃", "胸口不舒服": "🫀", "肚子不舒服": "🤢", "胃不舒服": "🤢", 
     "背部不舒服": "🔙", "腰部不舒服": "🎗️", "手臂不舒服": "💪", "手不舒服": "✋", 
     "手指不舒服": "☝️", "腿不舒服": "🦵", "腳不舒服": "🦶", "腳趾不舒服": "👣",
-
-    // 醫療 (症狀與協助)
     "痛": "⚠️", "癢": "🐜", "麻": "⚡", "腫": "🎈", "無力": "🏳️", "休息": "🛌",
-
-    // 社交 (禮貌、情緒、呼叫與聯絡)
+    // 社交
     "謝謝": "🙏", "抱歉": "🙇", "請幫我": "🙋", "我很開心": "😊", "不方便說話": "🤐",
     "叫媽媽": "👩", "叫老大": "🧑", "叫老二": "🧒", "叫老三": "👶", 
     "叫孫女": "👧", "聯絡醫生": "👨‍⚕️", "聯絡醫院": "🏥"
 };
-        // 2. 清除緩衝區函式
-        function clearBuffer() {
-            document.getElementById('buffer').innerText = '點擊下方按鈕開始溝通...';
-            speakText('已清除'); 
-        }
-
-        // 3. 自動 Emoji 處理函式
-        function applyEmoji(text) {
-            if (!text) return "";
-            if (/\p{Emoji}/u.test(text)) return text;
-            for (let key in EMOJI_MAP) {
-                if (text.includes(key)) return `${EMOJI_MAP[key]} ${text}`;
-            }
-            return `💬 ${text}`;
-        }
-
-        // 4. 畫面渲染主邏輯
-        function initUI(allData) {
-            // 渲染 Tab
-            const themes = [...new Set(allData.map(item => item.theme))];
-            const tabBar = document.getElementById('tab-bar');
-            tabBar.innerHTML = ''; 
-            themes.forEach(t => {
-                const div = document.createElement('div');
-                div.className = 'tab';
-                div.innerText = t;
-                div.onclick = () => renderGrid(allData, t);
-                tabBar.appendChild(div);
-            });
-
-            // 渲染社交詞
-            const bar = document.getElementById('social-bar');
-            bar.innerHTML = ''; 
-            allData.filter(d => d.isSocial).forEach(d => {
-                const div = document.createElement('div');
-                div.className = 'btn';
-                div.innerText = applyEmoji(d.label);
-                div.onclick = () => {
-                    document.getElementById('buffer').innerText = d.label;
-                    speakText(d.label);
-                };
-                bar.appendChild(div);
-            });
-
-            // 初始化渲染第一個 Tab
-            if(themes.length > 0) {
-                renderGrid(allData, themes[0]);
-            }
-        }
-
-        // 5. 渲染網格
-        function renderGrid(data, theme) {
-            const grid = document.getElementById('main-grid');
-            grid.innerHTML = '';
-            data.filter(d => d.theme === theme && !d.isSocial).forEach(d => {
-                const div = document.createElement('div');
-                div.className = 'btn';
-                div.innerText = applyEmoji(d.label);
-                div.onclick = () => {
-                    document.getElementById('buffer').innerText = d.label;
-                    speakText(d.label);
-                };
-                grid.appendChild(div);
-            });
-        }
 
 // ==========================================
-// 6. 語音朗讀函式 (升級版：支援男聲與音調調整)
+// 全新功能：讀取與記錄點擊次數
 // ==========================================
+function getStats() {
+    const stats = localStorage.getItem('aac_stats');
+    return stats ? JSON.parse(stats) : {};
+}
+
+function recordUsage(label) {
+    const stats = getStats();
+    stats[label] = (stats[label] || 0) + 1;
+    localStorage.setItem('aac_stats', JSON.stringify(stats));
+}
+
+// 2. 清除緩衝區函式
+function clearBuffer() {
+    document.getElementById('buffer').innerText = '點擊下方按鈕開始溝通...';
+    speakText('已清除'); 
+}
+
+// 3. 自動 Emoji 處理函式
+function applyEmoji(text) {
+    if (!text) return "";
+    if (/\p{Emoji}/u.test(text)) return text;
+    for (let key in EMOJI_MAP) {
+        if (text.includes(key)) return `${EMOJI_MAP[key]} ${text}`;
+    }
+    return `💬 ${text}`;
+}
+
+// 4. 畫面渲染主邏輯 (包含社交列排序)
+function initUI(allData) {
+    // 渲染 Tab
+    const themes = [...new Set(allData.map(item => item.theme))];
+    const tabBar = document.getElementById('tab-bar');
+    tabBar.innerHTML = ''; 
+    themes.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'tab';
+        div.innerText = t;
+        div.onclick = () => renderGrid(allData, t);
+        tabBar.appendChild(div);
+    });
+
+    // 取得統計數據，準備排序
+    const stats = getStats();
+
+    // 渲染社交詞 (並依點擊次數降冪排序)
+    const bar = document.getElementById('social-bar');
+    bar.innerHTML = ''; 
+    let socialData = allData.filter(d => d.isSocial);
+    socialData.sort((a, b) => (stats[b.label] || 0) - (stats[a.label] || 0));
+
+    socialData.forEach(d => {
+        const div = document.createElement('div');
+        div.className = 'btn';
+        div.innerText = applyEmoji(d.label);
+        div.onclick = () => {
+            document.getElementById('buffer').innerText = d.label;
+            speakText(d.label);
+            recordUsage(d.label); // 記錄點擊
+        };
+        bar.appendChild(div);
+    });
+
+    // 初始化渲染第一個 Tab
+    if(themes.length > 0) {
+        renderGrid(allData, themes[0]);
+    }
+}
+
+// 5. 渲染網格 (包含網格按鈕排序)
+function renderGrid(data, theme) {
+    const grid = document.getElementById('main-grid');
+    grid.innerHTML = '';
+    
+    // 取得統計數據
+    const stats = getStats();
+
+    // 過濾出該分類的按鈕，並依點擊次數降冪排序
+    let themeData = data.filter(d => d.theme === theme && !d.isSocial);
+    themeData.sort((a, b) => (stats[b.label] || 0) - (stats[a.label] || 0));
+
+    themeData.forEach(d => {
+        const div = document.createElement('div');
+        div.className = 'btn';
+        div.innerText = applyEmoji(d.label);
+        div.onclick = () => {
+            document.getElementById('buffer').innerText = d.label;
+            speakText(d.label);
+            recordUsage(d.label); // 記錄點擊
+        };
+        grid.appendChild(div);
+    });
+}
+
+// 6. 語音朗讀函式 (支援男聲降調)
 let systemVoices = [];
-
-// 網頁載入時，先抓取手機內建的所有語音庫
 window.speechSynthesis.onvoiceschanged = () => {
     systemVoices = window.speechSynthesis.getVoices();
 };
@@ -184,47 +201,42 @@ function speakText(text) {
         const utterance = new SpeechSynthesisUtterance(text);
         
         utterance.lang = 'zh-TW'; 
-        utterance.rate = 1.0;  // 語速 (1.0為正常，可改為 0.9 放慢)
-        
-        // 降低音調：0.1 到 2.0，設為 0.7 聽起來會偏向低沉的男聲
-        utterance.pitch = 0.7; 
+        utterance.rate = 1.0; 
+        utterance.pitch = 0.7; // 降調產生男聲效果
 
-        // 進階：嘗試尋找系統中真正的中文男聲
         if (systemVoices.length > 0) {
-            // 尋找名字裡有 Male 或 男 的中文語音
             const maleVoice = systemVoices.find(v => 
                 v.lang.includes('zh') && 
                 (v.name.includes('Male') || v.name.includes('男') || v.name.includes('Nan'))
             );
             if (maleVoice) {
                 utterance.voice = maleVoice;
-                utterance.pitch = 1.0; // 如果找到真男聲，就恢復正常音調
+                utterance.pitch = 1.0; 
             }
         }
-        
         window.speechSynthesis.speak(utterance);
     }
 }
 
-        // 7. 離線與連線資料處理邏輯
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbynWA6L3G9PaVK6dyyXwHvZXuzWPyaC5EQ9CJau8HxEhR9ZZAKSU6uXePj2Zt8b1tWybA/exec";
+// 7. 離線與連線資料處理邏輯
+const GAS_URL = "https://script.google.com/macros/s/AKfycbynWA6L3G9PaVK6dyyXwHvZXuzWPyaC5EQ9CJau8HxEhR9ZZAKSU6uXePj2Zt8b1tWybA/exec";
 
-        const cachedData = localStorage.getItem('aac_data');
-        if (cachedData) {
-            initUI(JSON.parse(cachedData));
+const cachedData = localStorage.getItem('aac_data');
+if (cachedData) {
+    initUI(JSON.parse(cachedData));
+}
+
+fetch(GAS_URL)
+    .then(res => res.json())
+    .then(data => {
+        localStorage.setItem('aac_data', JSON.stringify(data));
+        if (!cachedData) {
+            initUI(data);
         }
-
-        fetch(GAS_URL)
-            .then(res => res.json())
-            .then(data => {
-                localStorage.setItem('aac_data', JSON.stringify(data));
-                if (!cachedData) {
-                    initUI(data);
-                }
-            })
-            .catch(err => {
-                console.log("目前處於離線狀態，系統將繼續使用本地暫存資料。");
-            });
+    })
+    .catch(err => {
+        console.log("目前處於離線狀態，系統將繼續使用本地暫存資料。");
+    });
     </script>
 </body>
 </html>
