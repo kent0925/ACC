@@ -132,6 +132,24 @@ const EMOJI_MAP = {
                 grid.appendChild(div);
             });
         }
+
+        // 負責朗讀的函式
+function speakText(text) {
+    if ('speechSynthesis' in window) {
+        // 先停止之前的朗讀（避免按太快時重疊）
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-TW'; // 設定語言為台灣繁體中文
+        utterance.rate = 1.0;     // 朗讀速度
+        utterance.pitch = 1.0;    // 音調
+        
+        window.speechSynthesis.speak(utterance);
+    } else {
+        console.log("您的瀏覽器不支援語音朗讀功能");
+    }
+}
+
     </script>
 </body>
 </html>
