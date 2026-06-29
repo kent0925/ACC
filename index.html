@@ -1,242 +1,542 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AAC 溝通系統</title>
-<style>
-    body { margin: 0; font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; height: 100vh; }
-    
-    #buffer { height: 60px; background: white; border-bottom: 2px solid #ddd; display: flex; align-items: center; padding: 0 15px; font-size: 20px; font-weight: bold; }
-    
-   /* 修改這裡：加入 align-content: start; */
-#main-grid { 
-    flex: 1; 
-    overflow-y: auto; 
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
-    grid-auto-rows: max-content; /* 關鍵1：強制按鈕保持原有高度，絕對不准擠壓變形 */
-    align-content: start;        /* 關鍵2：讓所有按鈕從最頂部開始排，多出來的往下捲動 */
-    gap: 10px; 
-    padding: 10px; 
-}
-    
-    /* 修改這裡：加入 gap: 5px; */
-    .btn { 
-        background: white; 
-        border: 1px solid #ccc; 
-        border-radius: 10px; 
-        padding: 5px; 
-        text-align: center; 
-        box-shadow: 2px 2px 5px #ccc; 
-        cursor: pointer; 
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        aspect-ratio: 1 / 1; 
-        font-size: 16px; 
-        overflow: hidden;
-        gap: 5px; /* 關鍵！強制讓 Emoji 與文字之間保持 5px 的安全距離，避免圖文疊在一起 */
-    }
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f2f5f8;
+            --primary-color: #4a90e2;
+            --primary-gradient: linear-gradient(135deg, #4a90e2, #357abd);
+            --text-main: #2c3e50;
+            --text-muted: #7f8c8d;
+            --card-bg: #ffffff;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-active: 0 1px 3px rgba(0,0,0,0.04);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom, 20px);
+        }
 
-    .btn:active {
-        transform: scale(0.95); /* 按下去時縮小，模擬按壓感 */
-        background: #e0e0e0;     /* 按下去時顏色變深 */
-    }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    #social-bar { background: #e0e0e0; padding: 10px; display: flex; gap: 5px; overflow-x: auto; border-top: 1px solid #ccc; }
-    #tab-bar { background: #333; color: white; display: flex; justify-content: space-around; padding: 15px; }
-    .tab { cursor: pointer; padding: 5px 10px; }
-</style>
+        body { 
+            margin: 0; 
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg-color); 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            height: 100dvh;
+            overflow: hidden;
+            color: var(--text-main);
+        }
+        
+        /* 頂部顯示區 (Glassmorphism) */
+        #header { 
+            height: 80px; 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0,0,0,0.05); 
+            display: flex; 
+            align-items: center; 
+            padding: 0 20px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            z-index: 10;
+            padding-top: env(safe-area-inset-top, 0px);
+        }
+
+        #buffer { 
+            flex: 1; 
+            font-size: 24px; 
+            font-weight: 800; 
+            overflow: hidden; 
+            white-space: nowrap; 
+            text-overflow: ellipsis;
+            color: var(--primary-color);
+        }
+
+        .clear-btn {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .clear-btn:active {
+            background: rgba(220, 53, 69, 0.2);
+            transform: scale(0.95);
+        }
+        
+        /* 社交詞彙區 */
+        #social-bar { 
+            background: transparent; 
+            padding: 12px 15px; 
+            display: flex; 
+            gap: 10px; 
+            overflow-x: auto; 
+            scrollbar-width: none; /* Firefox */
+        }
+        #social-bar::-webkit-scrollbar { display: none; } /* Chrome */
+
+        #social-bar .btn {
+            flex: 0 0 auto;
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+        }
+        
+        #social-bar .btn .emoji { font-size: 28px; }
+        #social-bar .btn .label { font-size: 14px; }
+
+        /* 主要網格區 */
+        #main-grid { 
+            flex: 1; 
+            overflow-y: auto; 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            grid-auto-rows: max-content; 
+            align-content: start;        
+            gap: 15px; 
+            padding: 5px 15px 20px 15px; 
+        }
+        
+        /* 通用按鈕樣式 */
+        .btn { 
+            background: var(--card-bg); 
+            border-radius: 24px; 
+            padding: 10px; 
+            text-align: center; 
+            box-shadow: var(--shadow-sm); 
+            cursor: pointer; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1 / 1; 
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s, background 0.15s;
+            border: 2px solid transparent;
+        }
+
+        .btn:active {
+            transform: scale(0.92);
+            box-shadow: var(--shadow-active);
+            background: #f8f9fa;
+            border-color: rgba(74, 144, 226, 0.3);
+        }
+
+        .btn .emoji {
+            font-size: 40px;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .btn .label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        /* 底部導覽列 (Tab Bar) */
+        #tab-bar { 
+            background: var(--card-bg); 
+            display: flex; 
+            justify-content: space-around; 
+            padding: 12px 10px calc(12px + var(--safe-area-inset-bottom)) 10px; 
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.03);
+            border-top: 1px solid rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .tab { 
+            cursor: pointer; 
+            padding: 10px 18px; 
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab.active {
+            color: #fff;
+            background: var(--primary-gradient);
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+        }
+
+        /* 載入中覆蓋層 */
+        #loading {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary-color);
+            z-index: 999;
+            backdrop-filter: blur(5px);
+            transition: opacity 0.3s;
+        }
+        #loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 旋轉動畫 */
+        .spinner {
+            border: 4px solid rgba(74, 144, 226, 0.2);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .loading-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+    </style>
 </head>
 <body>
 
-    <div id="buffer-container" style="display: flex; align-items: center; background: white; border-bottom: 2px solid #ddd; height: 60px;">
-        <div id="buffer" style="flex: 1; padding: 0 15px; font-size: 20px; font-weight: bold; overflow: hidden; white-space: nowrap;">點擊下方按鈕開始溝通...</div>
-        <button onclick="clearBuffer()" style="margin-right: 10px; padding: 8px 12px; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; background: #fff; cursor: pointer;">清除</button>
+    <!-- 載入中畫面 -->
+    <div id="loading">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div>資料同步中...</div>
+        </div>
     </div>
-    <div id="main-grid"></div>
+
+    <!-- 頂部顯示區 -->
+    <header id="header">
+        <div id="buffer">點擊下方按鈕開始溝通...</div>
+        <button class="clear-btn" onclick="clearBuffer()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            清除
+        </button>
+    </header>
+
+    <!-- 社交詞彙區 -->
     <div id="social-bar"></div>
-    <div id="tab-bar"></div>
+
+    <!-- 主要網格區 -->
+    <main id="main-grid"></main>
+
+    <!-- 底部導覽列 -->
+    <nav id="tab-bar"></nav>
 
     <script>
-// 1. 內建 Emoji 映射 (包含所有最新詞彙)
-const EMOJI_MAP = {
-    // 食
-    "喝水": "💧", "咖啡": "☕", "牛肉": "🥩", "雞肉": "🍗", "豬肉": "🥓", 
-    "魚肉": "🐟", "海鮮": "🦐", "麵類": "🍜", "湯類": "🍲", "米飯": "🍚", 
-    "蔬菜 (紅/黃)": "🥕", "蔬菜 (綠/白/紫)": "🥦",
-    // 衣
-    "外套": "🧥", "長袖": "👕", "短袖": "👕", "長褲": "👖", "短褲": "🩳", 
-    "襪子": "🧦", "拖鞋": "🩴",
-    // 住
-    "開/關燈": "💡", "開/關電視": "📺", "開/關冷氣": "❄️", "開/關風扇": "🎐", 
-    "太冷": "🥶", "太熱": "🥵", "想睡覺": "🛌", "廁所": "🚽", "洗澡": "🚿", 
-    "洗臉": "🧽", "洗手/腳": "🧼", "刷牙": "🪥",
-    // 行
-    "回家裡": "🏠", "去店裡": "🏪", "回診和信": "🏥", "回診三重": "🏥", 
-    "坐公車": "🚌", "坐捷運": "🚇", "坐計程車": "🚕", "走路去": "🚶",
-    // 育樂
-    "手機": "📱", "手機充電": "🔋", "手錶": "⌚", "手錶充電": "⚡", 
-    "公園散步": "🌳", "堤防散步": "🌊", "到處走走": "🚶‍♂️", "運動場散步": "🏃",
-    // 醫療
-    "吃藥": "💊", "血糖藥": "🩸", "癌症藥": "🎗️", "止痛藥": "🩹",
-    "頭不舒服": "🤕", "眼睛不舒服": "👁️", "耳朵不舒服": "👂", "嘴巴不舒服": "👄", 
-    "鼻子不舒服": "👃", "胸口不舒服": "🫀", "肚子不舒服": "🤢", "胃不舒服": "🤢", 
-    "背部不舒服": "🔙", "腰部不舒服": "🎗️", "手臂不舒服": "💪", "手不舒服": "✋", 
-    "手指不舒服": "☝️", "腿不舒服": "🦵", "腳不舒服": "🦶", "腳趾不舒服": "👣",
-    "痛": "⚠️", "癢": "🐜", "麻": "⚡", "腫": "🎈", "無力": "🏳️", "休息": "🛌",
-    // 社交
-    "謝謝": "🙏", "抱歉": "🙇", "請幫我": "🙋", "我很開心": "😊", "不方便說話": "🤐",
-    "叫媽媽": "👩", "叫老大": "🧑", "叫老二": "🧒", "叫老三": "👶", 
-    "叫孫女": "👧", "聯絡醫生": "👨‍⚕️", "聯絡醫院": "🏥"
-};
-
-// ==========================================
-// 全新功能：讀取與記錄點擊次數
-// ==========================================
-function getStats() {
-    const stats = localStorage.getItem('aac_stats');
-    return stats ? JSON.parse(stats) : {};
-}
-
-function recordUsage(label) {
-    const stats = getStats();
-    stats[label] = (stats[label] || 0) + 1;
-    localStorage.setItem('aac_stats', JSON.stringify(stats));
-}
-
-// 2. 清除緩衝區函式
-function clearBuffer() {
-    document.getElementById('buffer').innerText = '點擊下方按鈕開始溝通...';
-    speakText('已清除'); 
-}
-
-// 3. 自動 Emoji 處理函式
-function applyEmoji(text) {
-    if (!text) return "";
-    if (/\p{Emoji}/u.test(text)) return text;
-    for (let key in EMOJI_MAP) {
-        if (text.includes(key)) return `${EMOJI_MAP[key]} ${text}`;
-    }
-    return `💬 ${text}`;
-}
-
-// 4. 畫面渲染主邏輯 (包含社交列排序)
-function initUI(allData) {
-    // 渲染 Tab
-    const themes = [...new Set(allData.map(item => item.theme))];
-    const tabBar = document.getElementById('tab-bar');
-    tabBar.innerHTML = ''; 
-    themes.forEach(t => {
-        const div = document.createElement('div');
-        div.className = 'tab';
-        div.innerText = t;
-        div.onclick = () => renderGrid(allData, t);
-        tabBar.appendChild(div);
-    });
-
-    // 取得統計數據，準備排序
-    const stats = getStats();
-
-    // 渲染社交詞 (並依點擊次數降冪排序)
-    const bar = document.getElementById('social-bar');
-    bar.innerHTML = ''; 
-    let socialData = allData.filter(d => d.isSocial);
-    socialData.sort((a, b) => (stats[b.label] || 0) - (stats[a.label] || 0));
-
-    socialData.forEach(d => {
-        const div = document.createElement('div');
-        div.className = 'btn';
-        div.innerText = applyEmoji(d.label);
-        div.onclick = () => {
-            document.getElementById('buffer').innerText = d.label;
-            speakText(d.label);
-            recordUsage(d.label); // 記錄點擊
+        // ==========================================
+        // 1. 全域變數與 Emoji 映射
+        // ==========================================
+        const EMOJI_MAP = {
+            "喝水": "💧", "咖啡": "☕", "吃藥": "💊", "血糖": "🩸", "癌症": "🎗️", 
+            "止痛": "🩹", "牛肉": "🥩", "雞肉": "🍗", "豬肉": "🥓", "魚肉": "🐟", 
+            "海鮮": "🦐", "麵類": "🍜", "湯類": "🍲", "米飯": "🍚", "蔬菜 (紅/黃)": "🥕", 
+            "蔬菜 (綠/白/紫)": "🥦",
+            "外套": "🧥", "長袖": "👕", "短袖": "👕", "長褲": "👖", "短褲": "🩳", 
+            "襪子": "🧦", "拖鞋": "🩴",
+            "開/關燈": "💡", "電視": "📺", "冷氣": "❄️", "電風扇": "🎐", "睡覺": "🛌",
+            "公車": "🚌", "捷運": "🚇", "計程車": "🚕", "走路": "🚶",
+            "手機": "📱", "手機充電": "🔋", "手錶": "⌚", "手錶充電": "⚡", 
+            "公園": "🌳", "堤防": "🌊", "散步": "🚶‍♀️", "運動場": "🏃",
+            "頭": "🧠", "眼睛": "👁️", "耳朵": "👂", "嘴巴": "👄", "喉嚨": "🗣️", 
+            "胸口": "🫀", "肚子": "🤰", "胃": "🤢", "背部": "🔙", "腰部": "🎗️", 
+            "手臂": "💪", "手": "✋", "手指": "☝️", "腿": "🦵", "腳": "🦶", "腳趾": "👣",
+            "痛": "⚠️", "癢": "🐜", "麻": "⚡", "腫": "🎈", "無力": "🏳️", "休息": "🛌",
+            "謝謝": "🙏", "抱歉": "🙇", "請幫我": "🙋", "我很開心": "😊"
         };
-        bar.appendChild(div);
-    });
 
-    // 初始化渲染第一個 Tab
-    if(themes.length > 0) {
-        renderGrid(allData, themes[0]);
-    }
-}
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbynWA6L3G9PaVK6dyyXwHvZXuzWPyaC5EQ9CJau8HxEhR9ZZAKSU6uXePj2Zt8b1tWybA/exec";
+        let globalData = [];
+        let currentTheme = "";
 
-// 5. 渲染網格 (包含網格按鈕排序)
-function renderGrid(data, theme) {
-    const grid = document.getElementById('main-grid');
-    grid.innerHTML = '';
-    
-    // 取得統計數據
-    const stats = getStats();
+        // ==========================================
+        // 2. 輔助函式
+        // ==========================================
+        function clearBuffer() {
+            document.getElementById('buffer').innerText = '點擊下方按鈕開始溝通...';
+            document.getElementById('buffer').style.color = 'var(--text-muted)';
+            speakText('已清除'); 
+        }
 
-    // 過濾出該分類的按鈕，並依點擊次數降冪排序
-    let themeData = data.filter(d => d.theme === theme && !d.isSocial);
-    themeData.sort((a, b) => (stats[b.label] || 0) - (stats[a.label] || 0));
+        // 取得本地使用次數紀錄
+        function getLocalUsage() {
+            const data = localStorage.getItem('aac_local_usage');
+            return data ? JSON.parse(data) : {};
+        }
 
-    themeData.forEach(d => {
-        const div = document.createElement('div');
-        div.className = 'btn';
-        div.innerText = applyEmoji(d.label);
-        div.onclick = () => {
-            document.getElementById('buffer').innerText = d.label;
-            speakText(d.label);
-            recordUsage(d.label); // 記錄點擊
+        // 更新本地使用次數並發送至後端
+        function recordUsage(label) {
+            const usage = getLocalUsage();
+            usage[label] = (usage[label] || 0) + 1;
+            localStorage.setItem('aac_local_usage', JSON.stringify(usage));
+            
+            // 重新渲染畫面以套用新排序
+            if (currentTheme) renderGrid(currentTheme);
+            if (typeof renderSocialBar === 'function') renderSocialBar();
+            
+            // 雲端統計 (背景發送給 GAS)
+            fetch(GAS_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'incrementUsage', label: label })
+            }).catch(e => console.log('背景傳送統計資料失敗', e));
+        }
+
+        function setBufferAndSpeak(text) {
+            const buffer = document.getElementById('buffer');
+            buffer.innerText = text;
+            buffer.style.color = 'var(--primary-color)';
+            speakText(text);
+            recordUsage(text);
+        }
+
+        function applyEmoji(originalText) {
+            if (!originalText) return { emoji: "💬", text: "" };
+            let text = originalText.trim();
+            
+            // 優先比對 EMOJI_MAP
+            for (let key in EMOJI_MAP) {
+                if (text.includes(key)) {
+                    return { emoji: EMOJI_MAP[key], text: text };
+                }
+            }
+            
+            // 解析文字中自帶的 Emoji
+            const emojiRegex = /^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
+            const match = text.match(emojiRegex);
+            if (match) {
+                let e = match[0];
+                let t = text.replace(e, '').trim();
+                return { emoji: e, text: t || text }; 
+            }
+            
+            return { emoji: "💬", text: text };
+        }
+
+        // 資料排序邏輯 (結合本地個人化與 GAS)
+        function sortData(dataArray) {
+            const localUsage = getLocalUsage();
+            
+            return dataArray.sort((a, b) => {
+                // 1. 本地使用次數優先 (越大越前面)
+                let localA = localUsage[a.label] || 0;
+                let localB = localUsage[b.label] || 0;
+                if (localA !== localB) {
+                    return localB - localA;
+                }
+                
+                // 2. 處理顯示順序 (越小越前面)
+                let orderValA = a.order ?? a['顯示順序'];
+                let orderValB = b.order ?? b['顯示順序'];
+                let orderA = (orderValA !== undefined && orderValA !== null && orderValA !== "") ? Number(orderValA) : Infinity;
+                let orderB = (orderValB !== undefined && orderValB !== null && orderValB !== "") ? Number(orderValB) : Infinity;
+                if (orderA !== orderB) {
+                    return orderA - orderB;
+                }
+                
+                // 3. 處理 GAS 的整體使用次數 (越大越前面)
+                let countValA = a.usageCount ?? a['使用次數'];
+                let countValB = b.usageCount ?? b['使用次數'];
+                let countA = (countValA !== undefined && countValA !== null && countValA !== "") ? Number(countValA) : 0;
+                let countB = (countValB !== undefined && countValB !== null && countValB !== "") ? Number(countValB) : 0;
+                
+                return countB - countA;
+            });
+        }
+
+        // 建立按鈕 DOM 元素
+        function createButtonDOM(d) {
+            const div = document.createElement('div');
+            div.className = 'btn';
+            
+            const { emoji, text } = applyEmoji(d.label);
+            
+            const emojiDiv = document.createElement('div');
+            emojiDiv.className = 'emoji';
+            emojiDiv.innerText = emoji;
+            
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'label';
+            labelDiv.innerText = text;
+            
+            div.appendChild(emojiDiv);
+            div.appendChild(labelDiv);
+            
+            div.onclick = () => setBufferAndSpeak(d.label);
+            return div;
+        }
+
+        // 獨立出的渲染社交詞彙邏輯
+        function renderSocialBar() {
+            const socialBar = document.getElementById('social-bar');
+            if (!socialBar) return;
+            socialBar.innerHTML = ''; 
+            
+            let socialData = globalData.filter(d => d.isSocial);
+            socialData = sortData(socialData);
+            
+            socialData.forEach(d => {
+                socialBar.appendChild(createButtonDOM(d));
+            });
+        }
+
+        // ==========================================
+        // 3. 畫面渲染邏輯
+        // ==========================================
+        function initUI(allData) {
+            globalData = allData;
+            
+            // 取得所有主題並過濾掉 undefined/null
+            const themes = [...new Set(allData.map(item => item.theme).filter(Boolean))];
+            
+            // 渲染 Tab Bar
+            const tabBar = document.getElementById('tab-bar');
+            tabBar.innerHTML = ''; 
+            themes.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'tab';
+                div.innerText = t;
+                div.onclick = () => renderGrid(t);
+                tabBar.appendChild(div);
+            });
+
+            // 渲染社交詞彙 (Social Bar)
+            renderSocialBar();
+
+            // 初始化渲染第一個 Tab
+            if(themes.length > 0) {
+                renderGrid(themes[0]);
+            }
+            
+            // 隱藏載入中畫面
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        function renderGrid(theme) {
+            currentTheme = theme;
+            
+            // 更新 Tab 樣式
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                if(tab.innerText === theme) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            const grid = document.getElementById('main-grid');
+            grid.innerHTML = '';
+            
+            // 取得該主題下的詞彙，排除社交詞彙，並進行排序
+            let gridData = globalData.filter(d => d.theme === theme && !d.isSocial);
+            gridData = sortData(gridData);
+            
+            gridData.forEach(d => {
+                grid.appendChild(createButtonDOM(d));
+            });
+            
+            // 滾動回頂部
+            grid.scrollTop = 0;
+        }
+
+        // ==========================================
+        // 4. 語音朗讀函式
+        // ==========================================
+        let systemVoices = [];
+        window.speechSynthesis.onvoiceschanged = () => {
+            systemVoices = window.speechSynthesis.getVoices();
         };
-        grid.appendChild(div);
-    });
-}
 
-// 6. 語音朗讀函式 (支援男聲降調)
-let systemVoices = [];
-window.speechSynthesis.onvoiceschanged = () => {
-    systemVoices = window.speechSynthesis.getVoices();
-};
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                // 中斷前一次發音，讓連續點擊反應更即時
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-TW'; 
+                utterance.rate = 1.0; 
+                utterance.pitch = 0.7; // 預設降調模擬男聲
 
-function speakText(text) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        
-        utterance.lang = 'zh-TW'; 
-        utterance.rate = 1.0; 
-        utterance.pitch = 0.7; // 降調產生男聲效果
+                if (systemVoices.length === 0) {
+                    systemVoices = window.speechSynthesis.getVoices();
+                }
 
-        if (systemVoices.length > 0) {
-            const maleVoice = systemVoices.find(v => 
-                v.lang.includes('zh') && 
-                (v.name.includes('Male') || v.name.includes('男') || v.name.includes('Nan'))
-            );
-            if (maleVoice) {
-                utterance.voice = maleVoice;
-                utterance.pitch = 1.0; 
+                if (systemVoices.length > 0) {
+                    const maleVoice = systemVoices.find(v => 
+                        v.lang.includes('zh') && 
+                        (v.name.includes('Male') || v.name.includes('男') || v.name.includes('Nan'))
+                    );
+                    if (maleVoice) {
+                        utterance.voice = maleVoice;
+                        utterance.pitch = 1.0; 
+                    }
+                }
+                
+                window.speechSynthesis.speak(utterance);
             }
         }
-        window.speechSynthesis.speak(utterance);
-    }
-}
 
-// 7. 離線與連線資料處理邏輯
-const GAS_URL = "https://script.google.com/macros/s/AKfycbynWA6L3G9PaVK6dyyXwHvZXuzWPyaC5EQ9CJau8HxEhR9ZZAKSU6uXePj2Zt8b1tWybA/exec";
+        // ==========================================
+        // 5. 資料載入邏輯
+        // ==========================================
+        window.onload = () => {
+            document.getElementById('buffer').style.color = 'var(--text-muted)';
+            
+            const cachedData = localStorage.getItem('aac_data');
+            if (cachedData) {
+                try {
+                    initUI(JSON.parse(cachedData));
+                } catch(e) {
+                    console.error("暫存資料解析失敗", e);
+                }
+            }
 
-const cachedData = localStorage.getItem('aac_data');
-if (cachedData) {
-    initUI(JSON.parse(cachedData));
-}
-
-fetch(GAS_URL)
-    .then(res => res.json())
-    .then(data => {
-        localStorage.setItem('aac_data', JSON.stringify(data));
-        if (!cachedData) {
-            initUI(data);
-        }
-    })
-    .catch(err => {
-        console.log("目前處於離線狀態，系統將繼續使用本地暫存資料。");
-    });
+            fetch(GAS_URL)
+                .then(res => res.json())
+                .then(data => {
+                    localStorage.setItem('aac_data', JSON.stringify(data));
+                    initUI(data); // 永遠使用最新資料重新渲染
+                })
+                .catch(err => {
+                    console.log("目前處於離線狀態，系統將繼續使用本地暫存資料。");
+                    if (!cachedData) {
+                        document.getElementById('loading').innerHTML = '<div style="color:red; text-align:center;">網路連線失敗，且無本地暫存資料。<br>請檢查網路後重新整理。</div>';
+                    } else {
+                        document.getElementById('loading').classList.add('hidden');
+                    }
+                });
+        };
     </script>
 </body>
 </html>
