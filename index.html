@@ -87,7 +87,7 @@
             background: transparent; 
             padding: 12px 15px; 
             display: flex; 
-            gap: 10px; 
+            /* 移除 gap 以相容舊版 Safari，改用 margin-right */
             overflow-x: auto; 
             scrollbar-width: none; /* Firefox */
         }
@@ -98,6 +98,10 @@
             width: 80px;
             height: 80px;
             border-radius: 20px;
+            margin-right: 10px; /* 替代 gap */
+        }
+        #social-bar .btn:last-child {
+            margin-right: 0;
         }
         
         #social-bar .btn .emoji { font-size: 28px; }
@@ -127,7 +131,8 @@
             align-items: center;
             justify-content: center;
             aspect-ratio: 1 / 1; 
-            min-height: 0; 
+            /* 加入 min-height 以防止舊版瀏覽器因不支援 aspect-ratio 或計算為 0 導致圖卡疊在一起 */
+            min-height: 110px; 
             overflow: hidden; 
             transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s, background 0.15s;
             border: 2px solid transparent;
@@ -229,6 +234,7 @@
             .btn {
                 border-radius: 18px;
                 padding: 5px;
+                min-height: 100px;
             }
             .btn .emoji {
                 font-size: 32px;
