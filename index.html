@@ -245,9 +245,159 @@
             }
         }
 
+        /* 懸浮新增按鈕 (FAB) */
+        #add-fab {
+            position: fixed;
+            bottom: max(env(safe-area-inset-bottom, 20px) + 80px, 90px);
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #add-fab:active {
+            transform: scale(0.9);
+        }
+
+        /* 新增詞彙對話框 (Modal) */
+        #add-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        #add-modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            width: 90%;
+            max-width: 400px;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        #add-modal-overlay.show .modal {
+            transform: translateY(0);
+        }
+
+        .modal h2 {
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            color: var(--text-main);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .form-group input[type="text"], .form-group select {
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.1);
+            font-size: 16px;
+            font-family: inherit;
+            outline: none;
+            background: #f8f9fa;
+        }
+        .form-group input[type="text"]:focus, .form-group select:focus {
+            border-color: var(--primary-color);
+            background: white;
+        }
+        .checkbox-group {
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+        }
+        .checkbox-group input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary-color);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 100px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        .modal-btn.cancel {
+            background: #f1f3f5;
+            color: var(--text-main);
+        }
+        .modal-btn.submit {
+            background: var(--primary-color);
+            color: white;
+        }
+
     </style>
 </head>
 <body>
+
+    <!-- 新增詞彙按鈕 (FAB) -->
+    <button id="add-fab" onclick="openAddModal()">+</button>
+
+    <!-- 新增詞彙對話框 -->
+    <div id="add-modal-overlay" onclick="closeAddModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h2>新增詞彙</h2>
+            <div class="form-group">
+                <label>大方向主題</label>
+                <select id="add-theme"></select>
+            </div>
+            <div class="form-group">
+                <label>詞彙名稱</label>
+                <input type="text" id="add-label" placeholder="例如：想尿尿、喉嚨痛" autocomplete="off">
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="add-social">
+                <label for="add-social">這是置頂常用詞彙 (社交詞彙)</label>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="closeAddModal(event)">取消</button>
+                <button class="modal-btn submit" onclick="submitNewWord()">確定新增</button>
+            </div>
+        </div>
+    </div>
 
     <!-- 載入中畫面 -->
     <div id="loading">
@@ -397,6 +547,84 @@
             }
             
             return { emoji: "💬", text: text };
+        }
+
+        // ==========================================
+        // 新增：使用者自訂詞彙邏輯
+        // ==========================================
+        function openAddModal() {
+            const overlay = document.getElementById('add-modal-overlay');
+            const themeSelect = document.getElementById('add-theme');
+            
+            // 重新填入選項
+            themeSelect.innerHTML = '';
+            const themes = [...new Set(globalData.map(item => item.theme).filter(Boolean))];
+            themes.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                opt.innerText = t;
+                if (t === currentTheme) opt.selected = true; // 預設為目前所在分頁
+                themeSelect.appendChild(opt);
+            });
+            
+            document.getElementById('add-label').value = '';
+            document.getElementById('add-social').checked = false;
+            
+            overlay.classList.add('show');
+            setTimeout(() => document.getElementById('add-label').focus(), 100);
+        }
+
+        function closeAddModal(e) {
+            if (e) e.preventDefault();
+            document.getElementById('add-modal-overlay').classList.remove('show');
+        }
+
+        function submitNewWord() {
+            const theme = document.getElementById('add-theme').value;
+            const label = document.getElementById('add-label').value.trim();
+            const isSocial = document.getElementById('add-social').checked;
+            
+            if (!label) {
+                alert("請輸入詞彙名稱！");
+                return;
+            }
+            
+            // 1. 樂觀 UI 更新 (加到目前的資料陣列)
+            const newItem = {
+                theme: theme,
+                label: label,
+                isSocial: isSocial,
+                usageCount: 0,
+                order: 999 // 預設放最後面
+            };
+            globalData.push(newItem);
+            
+            // 更新畫面
+            if (isSocial) {
+                renderSocialBar();
+            }
+            if (theme === currentTheme && !isSocial) {
+                renderGrid(theme);
+            }
+            
+            // 儲存至本地快取
+            localStorage.setItem('aac_data', JSON.stringify(globalData));
+            
+            closeAddModal();
+            setBufferAndSpeak(`已新增 ${label}`);
+            
+            // 2. 背景傳送到 GAS 試算表
+            fetch(GAS_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ 
+                    action: 'addWord', 
+                    theme: theme, 
+                    label: label, 
+                    isSocial: isSocial 
+                })
+            }).catch(e => console.log('背景傳送新增資料失敗', e));
         }
 
         // 資料排序邏輯 (結合本地個人化與 GAS)
